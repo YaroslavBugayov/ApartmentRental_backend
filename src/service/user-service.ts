@@ -1,0 +1,38 @@
+import { hashSync } from "bcrypt";
+import { UserModel } from "../models/user-model";
+import { PrismaClient } from '@prisma/client';
+import { tokenService } from "./token-service";
+import UserDTO from "../dtos/user-dto"
+
+const prisma = new PrismaClient();
+
+export const userService = {
+    async register(email: string, username: string, password: string) {
+        const candidate = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        if (candidate) {
+            throw new Error("User already exists")
+        }
+
+        const hashedPassword = hashSync(password, 10);
+        const user: UserModel = await prisma.user.create({
+            data: {
+                email: email,
+                username: username,
+                password: hashedPassword
+            }
+        });
+
+        const userDTO = new UserDTO(user);
+        const tokens = tokenService.generateTokens(user.id);
+        const refreshToken = tokens.refreshToken;
+        const accessToken = tokens.accessToken;
+        await tokenService.saveToken(user.id, tokens.refreshToken)
+
+        return { refreshToken, accessToken, userDTO }
+    }
+}
