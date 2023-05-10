@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { hashSync, compareSync } from 'bcrypt'
 import { PrismaClient } from '@prisma/client';
 import { User } from '../models/User';
-import { sign } from 'jsonwebtoken';
+import { sign, decode } from 'jsonwebtoken';
 import 'dotenv/config'
 
 const prisma = new PrismaClient();
@@ -47,7 +47,7 @@ export const authController = {
             const token = sign(
                 { userId: user.id },
                 process.env.JWT_SECRET as string,
-                { expiresIn: '1h' }
+                { expiresIn: '8760h' }
             )
 
             res.json({ token })
