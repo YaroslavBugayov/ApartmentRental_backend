@@ -11,10 +11,49 @@ datasource db {
 }
 
 model user {
-  id        Int     @id @default(autoincrement())
-  email     String  @unique @db.VarChar(50)
-  username  String  @unique @db.VarChar(25)
-  password  String  @db.VarChar(1000)
+  id       Int    @id @default(autoincrement())
+  email    String @unique @db.VarChar(50)
+  username String @unique @db.VarChar(25)
+  password String @db.VarChar(200)
+  token    token?
+
+  invitedUser invite[]
 
   @@map("user")
+}
+
+
+model token {
+  id            Int     @id @default(autoincrement())
+  refreshToken  String  @db.VarChar(500)
+  userId        Int     @unique
+  user          user    @relation(fields: [userId], references: [id])
+
+  @@map("token")
+}
+
+model profile {
+  id            Int     @id @default(autoincrement())
+  age           Int? 
+  name          String  @db.VarChar(500)
+  lastname      String  @db.VarChar(500)
+  city          String  @db.VarChar(500)
+  gender        String  @db.VarChar(500)
+  status        String  @db.VarChar(500)
+  userId        Int     @unique
+  user       user    @relation(fields: [userId], references: [id])
+  @@map("profile")
+}
+
+
+model invite {
+  id            Int     @id @default(autoincrement())
+
+  inviteUserId Int
+  inviteUser user @relation(fields: [inviteUserId], references: [id])
+
+  targetUserId Int?
+  targetUser user @relation(fields: [targetUserId], references: [id])
+
+  @@map("invite")
 }
