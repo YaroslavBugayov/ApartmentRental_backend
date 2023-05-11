@@ -1,11 +1,11 @@
 import jwt, {sign} from 'jsonwebtoken';
-import {PrismaClient} from '@prisma/client';
+import {PrismaClient, token} from '@prisma/client';
 import {JwtPayloadModel} from '../models/jwt-payload.model';
 
 const prisma = new PrismaClient();
 
 export const tokenService = {
-    generateTokens(userId: number) {
+    generateTokens(userId: number) : { accessToken: string, refreshToken: string } {
 
         const accessToken = sign(
             { userId: userId },
@@ -22,7 +22,7 @@ export const tokenService = {
         return { accessToken, refreshToken };
     },
 
-    async saveToken(userId: number, refreshToken: string) {
+    async saveToken(userId: number, refreshToken: string) : Promise<token> {
         const tokenData = await prisma.token.findUnique({
             where: {
                 userId: userId
@@ -46,7 +46,7 @@ export const tokenService = {
             });
     },
 
-    async removeToken(refreshToken: string) {
+    async removeToken(refreshToken: string) : Promise<token> {
         const tokenData = await prisma.token.delete({
             where: {
                 refreshToken: refreshToken
@@ -55,7 +55,7 @@ export const tokenService = {
         return tokenData;
     },
 
-    async findToken(refreshToken: string) {
+    async findToken(refreshToken: string) : Promise<token | null> {
         const tokenData = await prisma.token.findUnique({
             where: {
                 refreshToken: refreshToken

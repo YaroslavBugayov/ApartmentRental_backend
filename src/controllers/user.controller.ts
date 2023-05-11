@@ -4,7 +4,7 @@ import { validationResult } from 'express-validator';
 import 'dotenv/config';
 
 export const userController = {
-    async register(req: Request, res: Response) {
+    async register(req: Request, res: Response) : Promise<Response> {
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
@@ -24,7 +24,7 @@ export const userController = {
         }
     },
 
-    async login(req: Request, res: Response) {
+    async login(req: Request, res: Response) : Promise<Response> {
         try {
             const { email, password } = req.body;
             const user = await userService.login(email, password);
@@ -40,7 +40,7 @@ export const userController = {
         }
     },
 
-    async logout(req: Request, res: Response) {
+    async logout(req: Request, res: Response) : Promise<Response> {
         try {
             const { refreshToken } = req.cookies;
             const token = await userService.logout(refreshToken);
@@ -54,7 +54,7 @@ export const userController = {
         }
     },
 
-    async refresh(req: Request, res: Response) {
+    async refresh(req: Request, res: Response) : Promise<Response> {
         try {
             const { refreshToken } = req.cookies;
             const user = await userService.refresh(refreshToken);

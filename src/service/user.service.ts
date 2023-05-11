@@ -1,13 +1,14 @@
 import {compareSync, hashSync} from "bcrypt";
 import {UserModel} from "../models/user.model";
-import {PrismaClient} from '@prisma/client';
+import {PrismaClient, token} from '@prisma/client';
 import {tokenService} from "./token.service";
 import UserDto from '../dtos/user.dto';
 
 const prisma = new PrismaClient();
 
 export const userService = {
-    async register(email: string, username: string, password: string) {
+    async register(email: string, username: string, password: string)
+        : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> {
         const candidate = await prisma.user.findUnique({
             where: {
                 email: email
@@ -30,7 +31,8 @@ export const userService = {
         return await saveToken(user);
     },
 
-    async login(email: string, password: string) {
+    async login(email: string, password: string)
+        : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> {
         const user: UserModel | null = await prisma.user.findUnique({
             where:
                 { email: email }
@@ -47,11 +49,11 @@ export const userService = {
         return await saveToken(user);
     },
 
-    async logout(refreshToken: string) {
+    async logout(refreshToken: string) : Promise<token> {
         return await tokenService.removeToken(refreshToken);
     },
 
-    async refresh(refreshToken: string) {
+    async refresh(refreshToken: string) : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> {
         if (!refreshToken) {
             throw new Error("Unauthorized error");
         }
@@ -75,7 +77,7 @@ export const userService = {
     }
 }
 
-const saveToken = async (user: UserModel) => {
+const saveToken = async (user: UserModel) : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> => {
     const userDTO = new UserDto(user);
     const tokens = tokenService.generateTokens(user.id);
     const refreshToken = tokens.refreshToken;
