@@ -1,19 +1,21 @@
 import { Request, Response } from 'express';
-import { hashSync, compareSync } from 'bcrypt'
-import { PrismaClient } from '@prisma/client';
-import { UserModel } from '../models/user-model';
-import { sign, decode } from 'jsonwebtoken';
-import 'dotenv/config'
-import {userService} from "../service/user-service";
-
-const prisma = new PrismaClient();
+import { userService } from '../service/user-service';
+import { validationResult } from 'express-validator';
+import 'dotenv/config';
 
 export const userController = {
     async register(req: Request, res: Response) {
+        console.log("test")
         try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(500).json( { message: 'Invalid data', errors: errors.array() })
+            }
             const { email, username, password } = req.body;
-            const user = await userService.register(email, username, password)
-            res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true, secure: true })
+            const user = await userService.register(email, username, password);
+
+            res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true, secure: true });
+
             return res.status(201).json(user);
         } catch (error) {
             console.log(error);
@@ -22,32 +24,17 @@ export const userController = {
     },
 
     async login(req: Request, res: Response) {
-        const { email, password } = req.body;
         try {
-            const user: UserModel | null = await prisma.user.findUnique({
-                where:
-                    { email: email }
-            });
+            const { email, password } = req.body;
+            const user = await userService.login(email, password);
 
-            if (user == null) {
-                return res.status(401).json({ message: 'UserModel not found' })
-            }
+            res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true, secure: true });
 
-            if (!compareSync(password, user.password)) {
-                return res.status(401).json({ message: 'incorrect password' })
-            }
-
-            const token = sign(
-                { userId: user.id },
-                process.env.JWT_ACCESS_SECRET as string,
-                { expiresIn: '8760h' }
-            )
-
-            res.json({ token })
+            return res.status(201).json(user);
 
         } catch (error) {
-            console.log(error);
-            res.status(500).json({ message: 'Login failed' })
+            // return res.status(401).json({ message: error })
+            res.status(500).json({ message: 'Login failed' });
         }
     },
 

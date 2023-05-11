@@ -1,4 +1,4 @@
-import { hashSync } from "bcrypt";
+import { compareSync, hashSync } from "bcrypt";
 import { UserModel } from "../models/user-model";
 import { PrismaClient } from '@prisma/client';
 import { tokenService } from "./token-service";
@@ -32,6 +32,29 @@ export const userService = {
         const refreshToken = tokens.refreshToken;
         const accessToken = tokens.accessToken;
         await tokenService.saveToken(user.id, tokens.refreshToken)
+
+        return { refreshToken, accessToken, userDTO }
+    },
+
+    async login(email: string, password: string) {
+        const user: UserModel | null = await prisma.user.findUnique({
+            where:
+                { email: email }
+        });
+
+        if (user == null) {
+            throw new Error('UserModel not found');
+        }
+
+        if (!compareSync(password, user.password)) {
+            throw new Error('Incorrect password');
+        }
+
+        const userDTO = new UserDTO(user);
+        const tokens = tokenService.generateTokens(user.id);
+        const refreshToken = tokens.refreshToken;
+        const accessToken = tokens.accessToken;
+        await tokenService.saveToken(user.id, tokens.refreshToken);
 
         return { refreshToken, accessToken, userDTO }
     }
