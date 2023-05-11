@@ -1,8 +1,8 @@
-import { compareSync, hashSync } from "bcrypt";
-import { UserModel } from "../models/user.model";
-import { PrismaClient } from '@prisma/client';
-import { tokenService } from "./token.service";
-import UserDto from "../dtos/user.dto"
+import {compareSync, hashSync} from "bcrypt";
+import {UserModel} from "../models/user.model";
+import {PrismaClient} from '@prisma/client';
+import {tokenService} from "./token.service";
+import UserDto from '../dtos/user.dto';
 
 const prisma = new PrismaClient();
 
@@ -27,13 +27,7 @@ export const userService = {
             }
         });
 
-        const userDTO = new UserDto(user);
-        const tokens = tokenService.generateTokens(user.id);
-        const refreshToken = tokens.refreshToken;
-        const accessToken = tokens.accessToken;
-        await tokenService.saveToken(user.id, tokens.refreshToken)
-
-        return { refreshToken, accessToken, userDTO }
+        return await saveToken(user);
     },
 
     async login(email: string, password: string) {
@@ -50,17 +44,43 @@ export const userService = {
             throw new Error('Incorrect password');
         }
 
-        const userDTO = new UserDto(user);
-        const tokens = tokenService.generateTokens(user.id);
-        const refreshToken = tokens.refreshToken;
-        const accessToken = tokens.accessToken;
-        await tokenService.saveToken(user.id, tokens.refreshToken);
-
-        return { refreshToken, accessToken, userDTO }
+        return await saveToken(user);
     },
 
     async logout(refreshToken: string) {
-        const token = await tokenService.removeToken(refreshToken);
-        return token;
+        return await tokenService.removeToken(refreshToken);
+    },
+
+    async refresh(refreshToken: string) {
+        if (!refreshToken) {
+            throw new Error("Unauthorized error");
+        }
+        const userId = tokenService.validateRefreshToken(refreshToken);
+        const token = await tokenService.findToken(refreshToken);
+        if (!userId || !token) {
+            throw new Error("Unauthorized error");
+        }
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId
+            }
+        });
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        return await saveToken(user);
     }
+}
+
+const saveToken = async (user: UserModel) => {
+    const userDTO = new UserDto(user);
+    const tokens = tokenService.generateTokens(user.id);
+    const refreshToken = tokens.refreshToken;
+    const accessToken = tokens.accessToken;
+    await tokenService.saveToken(user.id, tokens.refreshToken);
+
+    return { refreshToken, accessToken, userDTO }
 }
