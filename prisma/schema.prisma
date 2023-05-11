@@ -19,7 +19,7 @@ model user {
 
 model token {
   id            Int     @id @default(autoincrement())
-  refreshToken  String  @db.VarChar(500)
+  refreshToken  String  @unique @db.VarChar(500)
   userId        Int     @unique
   user          user    @relation(fields: [userId], references: [id])
 

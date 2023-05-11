@@ -1,5 +1,5 @@
 import express from "express";
-import userRouter from './routes/user-router';
+import userRouter from './routes/user.router';
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from 'cors';

@@ -1,6 +1,6 @@
-import {UserModel} from "../models/user-model";
+import {UserModel} from "../models/user.model";
 
-export default class UserDTO {
+export default class UserDto {
     id;
     email;
 

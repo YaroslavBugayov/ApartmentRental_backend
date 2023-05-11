@@ -1,5 +1,5 @@
 import { sign } from "jsonwebtoken";
-import { TokenModel } from "../models/token-model";
+import { TokenModel } from "../models/token.model";
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -42,5 +42,14 @@ export const tokenService = {
         });
 
         return token;
+    },
+
+    async removeToken(refreshToken: string) {
+        const tokenData = await prisma.token.delete({
+            where: {
+                refreshToken: refreshToken
+            }
+        })
+        return tokenData;
     }
 };
