@@ -1,13 +1,15 @@
 import {compareSync, hashSync} from "bcrypt";
 import {UserModel} from "../models/user.model";
-import {PrismaClient} from '@prisma/client';
+import {PrismaClient, token} from '@prisma/client';
 import {tokenService} from "./token.service";
 import UserDto from '../dtos/user.dto';
+import {ApiError} from "../errors/api.error";
 
 const prisma = new PrismaClient();
 
 export const userService = {
-    async register(email: string, username: string, password: string) {
+    async register(email: string, username: string, password: string)
+        : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> {
         const candidate = await prisma.user.findUnique({
             where: {
                 email: email
@@ -15,7 +17,7 @@ export const userService = {
         });
 
         if (candidate) {
-            throw new Error("User already exists")
+            throw ApiError.BadRequest("User already exists");
         }
 
         const hashedPassword = hashSync(password, 10);
@@ -30,35 +32,40 @@ export const userService = {
         return await saveToken(user);
     },
 
-    async login(email: string, password: string) {
+    async login(email: string, password: string)
+        : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> {
         const user: UserModel | null = await prisma.user.findUnique({
             where:
                 { email: email }
         });
 
         if (user == null) {
-            throw new Error('UserModel not found');
+            throw ApiError.BadRequest('User not found');
         }
 
         if (!compareSync(password, user.password)) {
-            throw new Error('Incorrect password');
+            throw ApiError.BadRequest('Incorrect password');
         }
 
         return await saveToken(user);
     },
 
-    async logout(refreshToken: string) {
+    async logout(refreshToken: string) : Promise<token> {
+        if (!refreshToken) {
+            throw ApiError.UnauthorizedError();
+        }
         return await tokenService.removeToken(refreshToken);
     },
 
-    async refresh(refreshToken: string) {
+    async refresh(refreshToken: string) : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> {
         if (!refreshToken) {
-            throw new Error("Unauthorized error");
+            throw ApiError.UnauthorizedError();
         }
         const userId = tokenService.validateRefreshToken(refreshToken);
         const token = await tokenService.findToken(refreshToken);
+
         if (!userId || !token) {
-            throw new Error("Unauthorized error");
+            throw ApiError.UnauthorizedError();
         }
 
         const user = await prisma.user.findUnique({
@@ -68,14 +75,14 @@ export const userService = {
         });
 
         if (!user) {
-            throw new Error("User not found");
+            throw ApiError.BadRequest("User not found");
         }
 
         return await saveToken(user);
     }
 }
 
-const saveToken = async (user: UserModel) => {
+const saveToken = async (user: UserModel) : Promise<{refreshToken: string, accessToken: string, userDTO: UserDto}> => {
     const userDTO = new UserDto(user);
     const tokens = tokenService.generateTokens(user.id);
     const refreshToken = tokens.refreshToken;

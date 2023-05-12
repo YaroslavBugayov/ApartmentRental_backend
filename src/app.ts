@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
+import errorMiddleware from "./middlewares/error.middleware";
 
 dotenv.config();
 
@@ -17,5 +18,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/api', userRouter);
+
+app.use(errorMiddleware);
 
 app.listen(port, () => console.log(`Server has been started on port ${port}`));

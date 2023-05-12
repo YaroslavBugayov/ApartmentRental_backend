@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import {NextFunction, Request, Response} from 'express';
 import { userService } from '../service/user.service';
 import { validationResult } from 'express-validator';
 import 'dotenv/config';
 
 export const userController = {
-    async register(req: Request, res: Response) {
+    async register(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
@@ -19,12 +19,11 @@ export const userController = {
 
             return res.status(201).json({ user, "links": links });
         } catch (error) {
-            console.log(error);
-            return res.status(500).json({ message: 'Register failed' });
+            next(error);
         }
     },
 
-    async login(req: Request, res: Response) {
+    async login(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const { email, password } = req.body;
             const user = await userService.login(email, password);
@@ -35,12 +34,11 @@ export const userController = {
 
             return res.status(201).json({ user, "links": links });
         } catch (error) {
-            // return res.status(401).json({ message: error })
-            return res.status(500).json({ message: 'Login failed' });
+            next(error)
         }
     },
 
-    async logout(req: Request, res: Response) {
+    async logout(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const { refreshToken } = req.cookies;
             const token = await userService.logout(refreshToken);
@@ -50,11 +48,11 @@ export const userController = {
             res.clearCookie('refreshToken');
             return res.status(200).json({ token, "links": links });
         } catch (error) {
-            return res.status(500).json({ message: 'Logout failed' });
+            next(error)
         }
     },
 
-    async refresh(req: Request, res: Response) {
+    async refresh(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const { refreshToken } = req.cookies;
             const user = await userService.refresh(refreshToken);
@@ -65,7 +63,7 @@ export const userController = {
 
             return res.status(201).json({ user, "links": links });
         } catch (error) {
-            return res.status(500).json({ message: 'Refresh failed' });
+            next(error)
         }
     }
 };
