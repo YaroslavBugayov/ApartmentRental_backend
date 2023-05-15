@@ -3,11 +3,12 @@ import {profileService} from "../service/profile.service";
 import {decode, JwtPayload} from "jsonwebtoken";
 import {JwtPayloadModel} from "../models/jwt-payload.model";
 import {keywordService} from "../service/keyword.service";
+import ProfileDto from "../dtos/profile.dto";
 
 export const profileController = {
-    async getProfiles(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
+    async getAllProfiles(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
-            const profiles = await profileService.getAllUsers();
+            const profiles: ProfileDto[] = await profileService.getAllProfiles();
             return res.status(201).json(profiles)
         } catch (error) {
             next(error);

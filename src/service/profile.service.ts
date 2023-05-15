@@ -8,9 +8,13 @@ import {keywordService} from "./keyword.service";
 const prisma = new PrismaClient();
 
 export const profileService = {
-    async getAllUsers() : Promise<Profile[]> {
+    async getAllProfiles() : Promise<ProfileDto[]> {
         const profiles = await prisma.profile.findMany();
-        return profiles;
+        const profileDTOs = await Promise.all(profiles.map(async profile => {
+            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
+            return new ProfileDto(profile, keywords);
+        }));
+        return profileDTOs;
     },
 
     async setProfile(age: number, gender: string, city: string, keywords: KeywordModel[], description: string,
