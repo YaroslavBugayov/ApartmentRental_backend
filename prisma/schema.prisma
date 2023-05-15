@@ -7,21 +7,82 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model user {
-  id       Int    @id @default(autoincrement())
-  email    String @unique @db.VarChar(50)
-  username String @unique @db.VarChar(25)
-  password String @db.VarChar(200)
-  token    token?
+model User {
+  id              Int         @id @default(autoincrement())
+  email           String      @unique @db.VarChar(50)
+  username        String      @unique @db.VarChar(25)
+  password        String      @db.VarChar(200)
+  token           Token?
+  profile         Profile?
+  invitesSent     Invite[]    @relation("Sender")
+  invitesRecieve  Invite[]    @relation("Recipient")
 
-  @@map("user")
+  @@map("User")
 }
 
-model token {
+model Token {
   id            Int     @id @default(autoincrement())
   refreshToken  String  @unique @db.VarChar(500)
   userId        Int     @unique
-  user          user    @relation(fields: [userId], references: [id])
+  user          User    @relation(fields: [userId], references: [id])
 
-  @@map("token")
+  @@map("Token")
+}
+
+model Profile {
+  id            Int         @id @default(autoincrement())
+  age           Int         @db.Integer
+  firstName     String      @db.VarChar(20)
+  lastName      String      @db.VarChar(20)
+  city          String      @db.VarChar(20)
+  gender        Genger
+  description   String      @db.VarChar(300)
+  userId        Int         @unique
+  user          User        @relation(fields: [userId], references: [id])
+  keywords      ProfileKeyword[]
+
+  @@map("Profile")
+}
+
+model Keyword {
+  id            Int         @id @default(autoincrement())
+  profile       ProfileKeyword[]
+  word          String      @unique
+
+  @@map("Keyword")
+}
+
+model ProfileKeyword {
+  profile       Profile     @relation(fields: [profileId], references: [id])
+  profileId     Int
+  keyword       Keyword     @relation(fields: [keywordId], references: [id])
+  keywordId     Int
+
+  @@id([profileId, keywordId])
+}
+
+model Invite {
+  id            Int         @id @default(autoincrement())
+  sender        User        @relation("Sender", fields: [senderId], references: [id])
+  senderId      Int
+  recipient     User        @relation("Recipient", fields: [recipientId], references: [id])
+  recipientId   Int
+  status        Status
+
+  @@map("Invite")
+}
+
+enum Genger {
+  MALE
+  FEMALE
+
+  @@map("Gender")
+}
+
+enum Status {
+  SENT
+  ACCEPTED
+  REJECTED
+
+  @@map("Status")
 }

@@ -1,6 +1,6 @@
 import {compareSync, hashSync} from "bcrypt";
 import {UserModel} from "../models/user.model";
-import {PrismaClient, token} from '@prisma/client';
+import {PrismaClient, Token} from '@prisma/client';
 import {tokenService} from "./token.service";
 import UserDto from '../dtos/user.dto';
 import {ApiError} from "../errors/api.error";
@@ -39,7 +39,7 @@ export const userService = {
                 { email: email }
         });
 
-        if (user == null) {
+        if (!user) {
             throw ApiError.BadRequest('User not found');
         }
 
@@ -50,7 +50,7 @@ export const userService = {
         return await saveToken(user);
     },
 
-    async logout(refreshToken: string) : Promise<token> {
+    async logout(refreshToken: string) : Promise<Token> {
         if (!refreshToken) {
             throw ApiError.UnauthorizedError();
         }
