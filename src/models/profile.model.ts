@@ -1,4 +1,4 @@
-import {Genger, Keyword, User} from "@prisma/client";
+import {Gender, Keyword, User} from "@prisma/client";
 
 export interface ProfileModel {
     id: number;
@@ -6,7 +6,7 @@ export interface ProfileModel {
     firstName: string;
     lastName: string;
     city: string;
-    gender: Genger;
+    gender: Gender;
     description: string;
     user: User;
     keywords: Keyword[];

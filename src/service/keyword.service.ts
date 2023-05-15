@@ -1,6 +1,7 @@
 import KeywordDto from "../dtos/keyword.dto";
-import {Keyword, PrismaClient} from "@prisma/client";
+import {Keyword, PrismaClient, Profile, ProfileKeyword} from "@prisma/client";
 import {ProfileModel} from "../models/profile.model";
+import {ApiError} from "../errors/api.error";
 
 const prisma = new PrismaClient();
 
@@ -11,26 +12,27 @@ export const keywordService = {
         return keywordDTOs;
     },
 
-    // async writeKeywords(profile: ProfileModel) {
-    //     for (const keyword of profile.keywords) {
-    //         const keywordDb: Keyword | null = await prisma.keyword.findUnique({
-    //             where: {
-    //                 word: keyword.word
-    //             }
-    //         });
-    //
-    //         if (!keywordDb) {
-    //             prisma.keyword.create({
-    //                 data: {
-    //                     word: keyword.word,
-    //                     profile: {
-    //                         connect: profile
-    //                     }
-    //                 }
-    //             })
-    //         } else {
-    //             prisma.keyword.create()
-    //         }
-    //     }
-    // }
+    async getProfilesKeywords(id: number) : Promise<KeywordDto[]> {
+        const profile: Profile | null = await prisma.profile.findUnique({ where: { userId: id } });
+        if (!profile) {
+            throw ApiError.BadRequest("User not found");
+        } else {
+            const profileKeywords: ProfileKeyword[] = await prisma.profileKeyword.findMany({
+                where: {
+                    profileId: profile.id
+                }
+            });
+            const keywordIds = profileKeywords.map((elem) => elem.keywordId);
+
+            const keywords = await prisma.keyword.findMany({
+                where: { id: { in: keywordIds } },
+            });
+
+            const keywordDTOs: KeywordDto[] = keywords
+                .filter((keyword) => keyword !== null)
+                .map((keyword) => new KeywordDto(keyword!.word));
+
+            return keywordDTOs;
+        }
+    }
 }

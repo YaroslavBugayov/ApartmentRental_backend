@@ -1,5 +1,9 @@
-import {Genger, PrismaClient, Profile} from "@prisma/client";
+import {Gender, PrismaClient, Profile} from "@prisma/client";
 import {KeywordModel} from "../models/keyword.model";
+import {ApiError} from "../errors/api.error";
+import KeywordDto from "../dtos/keyword.dto";
+import ProfileDto from "../dtos/profile.dto";
+import {keywordService} from "./keyword.service";
 
 const prisma = new PrismaClient();
 
@@ -10,7 +14,7 @@ export const profileService = {
     },
 
     async setProfile(age: number, gender: string, city: string, keywords: KeywordModel[], description: string,
-                     lastName: string, firstName: string, id: number) : Promise<Profile> {
+                     lastName: string, firstName: string, id: number) : Promise<ProfileDto> {
 
         const profileDb: Profile | null = await prisma.profile.findUnique({
             where: {
@@ -18,22 +22,20 @@ export const profileService = {
             }
         });
 
-        const existingKeywords = await prisma.keyword.findMany({
-            where: {
-                word: {
-                    in: keywords.map(keyword => keyword.word)
+        if (profileDb != null) {
+            await prisma.profileKeyword.deleteMany({
+                where: {
+                    profileId: profileDb.id
                 }
-            }
-        });
-
-        const existingKeywordWords = new Set(existingKeywords.map(keyword => keyword.word));
+            })
+        }
 
         const data = {
             age: age,
             firstName: firstName,
             lastName: lastName,
             city: city,
-            gender: gender as Genger,
+            gender: gender as Gender,
             description: description,
             user: {
                 connect:
@@ -41,7 +43,6 @@ export const profileService = {
             },
             keywords: {
                 create: keywords
-                    .filter(keyword => !existingKeywordWords.has(keyword.word))
                     .map(keyword => ({
                         keyword: {
                             connectOrCreate: {
@@ -68,15 +69,21 @@ export const profileService = {
                 data: data
             });
 
-        return profileData;
+        const keywordDTOs: KeywordDto[] = await keywordService.getProfilesKeywords(id);
+        return new ProfileDto(profileData, keywordDTOs);
     },
 
-    async getProfile(id: number) : Promise<Profile | null> {
+    async getProfile(id: number) : Promise<ProfileDto | null> {
         const profile: Profile | null = await prisma.profile.findUnique({
             where: {
                 userId: id
             }
         });
-        return profile;
+        if (!profile) {
+            throw ApiError.BadRequest("Profile not found");
+        }
+
+        const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(id);
+        return new ProfileDto(profile, keywords);
     }
 }

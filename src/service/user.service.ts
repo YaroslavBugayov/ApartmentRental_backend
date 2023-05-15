@@ -1,6 +1,6 @@
 import {compareSync, hashSync} from "bcrypt";
 import {UserModel} from "../models/user.model";
-import {PrismaClient, Token} from '@prisma/client';
+import {PrismaClient, Token, User} from '@prisma/client';
 import {tokenService} from "./token.service";
 import UserDto from '../dtos/user.dto';
 import {ApiError} from "../errors/api.error";
