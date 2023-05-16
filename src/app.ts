@@ -23,6 +23,7 @@ app.use('/api', userRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/invite', inviteRouter)
 
+// app.use('/api/invite', inviteRouter)
 app.use(errorMiddleware);
 
 app.listen(port, () => console.log(`Server has been started on port ${port}`));
