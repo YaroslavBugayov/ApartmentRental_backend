@@ -89,5 +89,24 @@ export const profileService = {
 
         const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(id);
         return new ProfileDto(profile, keywords);
-    }
+    },
+
+    async getProfilesByKeyword(keyword: string) : Promise<ProfileDto[]> {
+        const profiles = await prisma.profile.findMany({
+            where: {
+                keywords: {
+                    some: {
+                        keyword: {
+                            word: keyword
+                        }
+                    }
+                }
+            }
+        });
+        const profileDTOs = await Promise.all(profiles.map(async profile => {
+            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
+            return new ProfileDto(profile, keywords);
+        }));
+        return profileDTOs;
+    },
 }

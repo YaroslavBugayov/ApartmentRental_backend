@@ -31,5 +31,15 @@ export const profileController = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+
+    async getProfilesByKeyword(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
+        try {
+            const { keyword } = req.params;
+            const profiles: ProfileDto[] = await profileService.getProfilesByKeyword(keyword);
+            return res.status(201).json(profiles)
+        } catch (error) {
+            next(error);
+        }
+    },
 }

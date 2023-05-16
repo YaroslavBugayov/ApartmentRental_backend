@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/all', authMiddleware, profileController.getAllProfiles);
 router.post('/set', authMiddleware, profileController.setProfile);
 router.get('/get', authMiddleware, profileController.getProfile);
+router.get('/filter/:keyword', authMiddleware, profileController.getProfilesByKeyword);
 
 router.get('/keywords', authMiddleware, keywordController.getKeywords);
 
