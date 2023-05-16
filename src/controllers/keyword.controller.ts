@@ -1,5 +1,4 @@
 import { Request, NextFunction, Response } from "express";
-import KeywordDto from "../dtos/keyword.dto";
 import {keywordService} from "../service/keyword.service";
 
 export const keywordController = {

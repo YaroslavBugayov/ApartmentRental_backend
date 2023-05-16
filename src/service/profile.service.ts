@@ -1,24 +1,31 @@
-import {Gender, PrismaClient, Profile} from "@prisma/client";
+import {Gender, PrismaClient, Profile, User} from "@prisma/client";
 import {KeywordModel} from "../models/keyword.model";
 import {ApiError} from "../errors/api.error";
 import KeywordDto from "../dtos/keyword.dto";
 import ProfileDto from "../dtos/profile.dto";
 import {keywordService} from "./keyword.service";
 
+type ProfileWithUser = Profile & { user: User }
+
 const prisma = new PrismaClient();
 
 export const profileService = {
     async getAllProfiles() : Promise<ProfileDto[]> {
-        const profiles = await prisma.profile.findMany();
+        const profiles: ProfileWithUser[] = await prisma.profile.findMany({
+            include: {
+                user: true
+            }
+        });
         const profileDTOs = await Promise.all(profiles.map(async profile => {
             const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords);
+            return new ProfileDto(profile, keywords, profile.user.username);
         }));
         return profileDTOs;
     },
 
     async setProfile(age: number, gender: string, city: string, keywords: KeywordModel[], description: string,
-                     lastName: string, firstName: string, id: number) : Promise<ProfileDto> {
+                     lastName: string, firstName: string, contact: string, id: number)
+        : Promise<{ profile: ProfileDto, contact: string } | null> {
 
         const profileDb: Profile | null = await prisma.profile.findUnique({
             where: {
@@ -49,6 +56,7 @@ export const profileService = {
                 connect:
                     { id: id }
             },
+            contact: contact,
             keywords: {
                 create: keywords
                     .map(keyword => ({
@@ -66,25 +74,35 @@ export const profileService = {
             }
         };
 
-        const profileData: Profile = !profileDb
+        const profileData: ProfileWithUser = !profileDb
             ? await prisma.profile.create({
-                data: data
+                data: data,
+                include: {
+                    user: true
+                }
             })
             : await prisma.profile.update({
                 where: {
                     userId: id
                 },
-                data: data
+                data: data,
+                include: {
+                    user: true
+                }
             });
 
         const keywordDTOs: KeywordDto[] = await keywordService.getProfilesKeywords(id);
-        return new ProfileDto(profileData, keywordDTOs);
+        return { profile: new ProfileDto(profileData, keywords, profileData.user.username),
+            contact: profileData.contact };
     },
 
-    async getProfile(id: number) : Promise<ProfileDto | null> {
-        const profile: Profile | null = await prisma.profile.findUnique({
+    async getProfile(id: number) : Promise<{ profile: ProfileDto, contact: string } | null> {
+        const profile: ProfileWithUser | null = await prisma.profile.findUnique({
             where: {
                 userId: id
+            },
+            include: {
+                user: true
             }
         });
         if (!profile) {
@@ -92,11 +110,11 @@ export const profileService = {
         }
 
         const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(id);
-        return new ProfileDto(profile, keywords);
+        return { profile: new ProfileDto(profile, keywords, profile.user.username), contact: profile.contact };
     },
 
     async getProfilesByKeyword(keyword: string) : Promise<ProfileDto[]> {
-        const profiles = await prisma.profile.findMany({
+        const profiles: ProfileWithUser[] = await prisma.profile.findMany({
             where: {
                 keywords: {
                     some: {
@@ -105,11 +123,14 @@ export const profileService = {
                         }
                     }
                 }
+            },
+            include: {
+                user: true
             }
         });
         const profileDTOs = await Promise.all(profiles.map(async profile => {
             const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords);
+            return new ProfileDto(profile, keywords, profile.user.username);
         }));
         return profileDTOs;
     },
@@ -118,11 +139,14 @@ export const profileService = {
         const profiles = await prisma.profile.findMany({
             where: {
                 city: city
+            },
+            include: {
+                user: true
             }
         });
         const profileDTOs = await Promise.all(profiles.map(async profile => {
             const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords);
+            return new ProfileDto(profile, keywords, profile.user.username);
         }));
         return profileDTOs;
     },
@@ -131,15 +155,41 @@ export const profileService = {
         if (!(gender in Gender)) {
             throw ApiError.BadRequest("Unknown gender");
         }
-        const profiles = await prisma.profile.findMany({
+        const profiles: ProfileWithUser[] = await prisma.profile.findMany({
             where: {
                 gender: gender as Gender
+            },
+            include: {
+                user: true
             }
         });
         const profileDTOs = await Promise.all(profiles.map(async profile => {
             const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords);
+            return new ProfileDto(profile, keywords, profile.user.username);
         }));
         return profileDTOs;
     },
+
+    async delete(id: number) : Promise<Profile> {
+        const profileDb: Profile | null = await prisma.profile.findUnique({
+            where: {
+                userId: id
+            }
+        });
+        if (!profileDb) {
+            throw ApiError.BadRequest("Profile not found");
+        }
+        await prisma.profileKeyword.deleteMany({
+            where: {
+                profileId: profileDb.id
+            }
+        });
+
+        const profile: Profile = await prisma.profile.delete({
+            where: {
+                userId: id
+            }
+        });
+        return profile;
+    }
 }
