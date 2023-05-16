@@ -79,26 +79,21 @@ export const inviteService = {
                 recipientId: id
             }
         });
-        const inviteDTOs: ReceivedInviteDto[] = await Promise.all(invites.map(async invite => {
-            const sender: User | null = await prisma.user.findUnique({
-                where: {
-                    id: invite.senderId
-                }
-            });
-            const senderUsername = sender ? sender.username : 'Unknown user';
-            if (invite.status == Status.ACCEPTED) {
-                const sendersProfile: Profile | null = await prisma.profile.findUnique({
-                    where: {
-                        userId: sender?.id
-                    }
-                });
-                return new ReceivedInviteWithContactDto(senderUsername, invite.status,
-                    sendersProfile?.contact != undefined ? sendersProfile?.contact : 'Contacts not found');
-            } else {
-                return new ReceivedInviteDto(senderUsername, invite.status);
+        return await getReceivedInviteDTOs(invites);
+    },
+
+    async getReceivedByStatus(id: number, status: string) : Promise<ReceivedInviteDto[]> {
+        if (!(status in Status)) {
+            throw ApiError.BadRequest("Unknown status");
+        }
+        const invites: Invite[] = await prisma.invite.findMany({
+            where: {
+                recipientId: id,
+                status: status as Status
             }
-        }));
-        return inviteDTOs;
+        });
+
+        return await getReceivedInviteDTOs(invites);
     },
 
     async getSent(id: number) : Promise<SentInviteDto[]> {
@@ -107,26 +102,20 @@ export const inviteService = {
                 senderId: id
             }
         });
-        const inviteDTOs: SentInviteDto[] = await Promise.all(invites.map(async invite => {
-            const recipient: User | null = await prisma.user.findUnique({
-                where: {
-                    id: invite.recipientId
-                }
-            });
-            const recipientUsername = recipient ? recipient.username : 'Unknown user';
-            if (invite.status == Status.ACCEPTED) {
-                const recipientProfile: Profile | null = await prisma.profile.findUnique({
-                    where: {
-                        userId: recipient?.id
-                    }
-                });
-                return new SentInviteWithContactDto(recipientUsername, invite.status,
-                    recipientProfile?.contact != undefined ? recipientProfile?.contact : 'Contacts not found');
-            } else {
-                return new SentInviteDto(recipientUsername, invite.status);
+        return getSentInveteDTOs(invites);
+    },
+
+    async getSentByStatus(id: number, status: string) : Promise<SentInviteDto[]> {
+        if (!(status in Status)) {
+            throw ApiError.BadRequest("Unknown status");
+        }
+        const invites: Invite[] = await prisma.invite.findMany({
+            where: {
+                senderId: id,
+                status: status as Status
             }
-        }));
-        return inviteDTOs;
+        });
+        return getSentInveteDTOs(invites);
     },
 
     async answer(id: number, sender: string, status: string) : Promise<ReceivedInviteDto> {
@@ -163,4 +152,48 @@ export const inviteService = {
 
         return new ReceivedInviteDto(sender, invite.status);
     }
+}
+
+const getReceivedInviteDTOs = async (invites: Invite[]) : Promise<ReceivedInviteDto[]> => {
+    return await Promise.all(invites.map(async invite => {
+        const sender: User | null = await prisma.user.findUnique({
+            where: {
+                id: invite.senderId
+            }
+        });
+        const senderUsername = sender ? sender.username : 'Unknown user';
+        if (invite.status == Status.ACCEPTED) {
+            const sendersProfile: Profile | null = await prisma.profile.findUnique({
+                where: {
+                    userId: sender?.id
+                }
+            });
+            return new ReceivedInviteWithContactDto(senderUsername, invite.status,
+                sendersProfile?.contact != undefined ? sendersProfile?.contact : 'Contacts not found');
+        } else {
+            return new ReceivedInviteDto(senderUsername, invite.status);
+        }
+    }));
+}
+
+const getSentInveteDTOs = async (invites: Invite[]) : Promise<SentInviteDto[]> => {
+    return await Promise.all(invites.map(async invite => {
+        const recipient: User | null = await prisma.user.findUnique({
+            where: {
+                id: invite.recipientId
+            }
+        });
+        const recipientUsername = recipient ? recipient.username : 'Unknown user';
+        if (invite.status == Status.ACCEPTED) {
+            const recipientProfile: Profile | null = await prisma.profile.findUnique({
+                where: {
+                    userId: recipient?.id
+                }
+            });
+            return new SentInviteWithContactDto(recipientUsername, invite.status,
+                recipientProfile?.contact != undefined ? recipientProfile?.contact : 'Contacts not found');
+        } else {
+            return new SentInviteDto(recipientUsername, invite.status);
+        }
+    }));
 }
