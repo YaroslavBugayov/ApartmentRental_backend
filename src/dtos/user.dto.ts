@@ -1,11 +1,11 @@
 import {UserModel} from "../models/user.model";
 
 export default class UserDto {
-    id;
+    username;
     email;
 
     constructor(model: UserModel) {
-        this.id = model.id;
+        this.username = model.username;
         this.email = model.email;
     }
 }
