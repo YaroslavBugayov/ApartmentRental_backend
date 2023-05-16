@@ -1,6 +1,6 @@
 import {Status} from "@prisma/client";
 
-export default class InviteDto {
+export default class SentInviteDto {
     recipientUsername: string;
     status: Status;
 
