@@ -20,6 +20,14 @@ export const inviteController = {
         }
     },
 
+    async getSent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+        try {
+            return res.status(201).json(await inviteService.getSent(req.userId as number));
+        } catch (error) {
+            next(error);
+        }
+    },
+
     async answer(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const { sender, status } = req.body;

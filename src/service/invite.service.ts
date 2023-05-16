@@ -3,6 +3,7 @@ import {ApiError} from "../errors/api.error";
 import SentInviteDto from "../dtos/sent-invite.dto";
 import ReceivedInviteDto from "../dtos/received-invite.dto";
 import ReceivedInviteWithContactDto from "../dtos/received-invite-with-contact.dto";
+import SentInviteWithContactDto from "../dtos/sent-invete-with-contact.dto";
 
 const prisma = new PrismaClient();
 
@@ -95,6 +96,34 @@ export const inviteService = {
                     sendersProfile?.contact != undefined ? sendersProfile?.contact : 'Contacts not found');
             } else {
                 return new ReceivedInviteDto(senderUsername, invite.status);
+            }
+        }));
+        return inviteDTOs;
+    },
+
+    async getSent(id: number) : Promise<SentInviteDto[]> {
+        const invites: Invite[] = await prisma.invite.findMany({
+            where: {
+                senderId: id
+            }
+        });
+        const inviteDTOs: SentInviteDto[] = await Promise.all(invites.map(async invite => {
+            const recipient: User | null = await prisma.user.findUnique({
+                where: {
+                    id: invite.recipientId
+                }
+            });
+            const recipientUsername = recipient ? recipient.username : 'Unknown user';
+            if (invite.status == Status.ACCEPTED) {
+                const recipientProfile: Profile | null = await prisma.profile.findUnique({
+                    where: {
+                        userId: recipient?.id
+                    }
+                });
+                return new SentInviteWithContactDto(recipientUsername, invite.status,
+                    recipientProfile?.contact != undefined ? recipientProfile?.contact : 'Contacts not found');
+            } else {
+                return new SentInviteDto(recipientUsername, invite.status);
             }
         }));
         return inviteDTOs;
