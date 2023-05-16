@@ -17,7 +17,7 @@ export const userController = {
 
             res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true });
 
-            return res.status(201).json({ user, "links": links });
+            return res.status(201).json({ "user": user.userDTO, "accessToken": user.accessToken, "links": links });
         } catch (error) {
             next(error);
         }
@@ -32,7 +32,7 @@ export const userController = {
 
             res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true });
 
-            return res.status(201).json({ user, "links": links });
+            return res.status(201).json({ "user": user.userDTO, "accessToken": user.accessToken, "links": links });
         } catch (error) {
             next(error)
         }
@@ -46,7 +46,7 @@ export const userController = {
             const links = [ loginLink, registerLink ]
 
             res.clearCookie('refreshToken');
-            return res.status(200).json({ token, "links": links });
+            return res.status(200).json({ "links": links });
         } catch (error) {
             next(error)
         }
@@ -61,7 +61,7 @@ export const userController = {
 
             res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true });
 
-            return res.status(201).json({ user, "links": links });
+            return res.status(201).json({ "user": user.userDTO, "accessToken": user.accessToken, "links": links });
         } catch (error) {
             next(error)
         }
