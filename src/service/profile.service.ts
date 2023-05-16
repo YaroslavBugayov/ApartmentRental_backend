@@ -26,6 +26,10 @@ export const profileService = {
             }
         });
 
+        if (!(gender in Gender)) {
+            throw ApiError.BadRequest("Unknown gender");
+        }
+
         if (profileDb != null) {
             await prisma.profileKeyword.deleteMany({
                 where: {
@@ -101,6 +105,35 @@ export const profileService = {
                         }
                     }
                 }
+            }
+        });
+        const profileDTOs = await Promise.all(profiles.map(async profile => {
+            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
+            return new ProfileDto(profile, keywords);
+        }));
+        return profileDTOs;
+    },
+
+    async getProfilesByCity(city: string) : Promise<ProfileDto[]> {
+        const profiles = await prisma.profile.findMany({
+            where: {
+                city: city
+            }
+        });
+        const profileDTOs = await Promise.all(profiles.map(async profile => {
+            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
+            return new ProfileDto(profile, keywords);
+        }));
+        return profileDTOs;
+    },
+
+    async getProfilesByGender(gender: string) : Promise<ProfileDto[]> {
+        if (!(gender in Gender)) {
+            throw ApiError.BadRequest("Unknown gender");
+        }
+        const profiles = await prisma.profile.findMany({
+            where: {
+                gender: gender as Gender
             }
         });
         const profileDTOs = await Promise.all(profiles.map(async profile => {
