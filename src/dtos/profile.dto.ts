@@ -2,6 +2,7 @@ import {Gender, Profile} from "@prisma/client";
 import KeywordDto from "./keyword.dto";
 
 export default class ProfileDto {
+    username;
     age;
     firstName;
     lastName;
@@ -10,7 +11,8 @@ export default class ProfileDto {
     description;
     keywords;
 
-    constructor(profile: Profile, keywords: KeywordDto[]) {
+    constructor(profile: Profile, keywords: KeywordDto[], username: string) {
+        this.username = username;
         this.age = profile.age;
         this.firstName = profile.firstName;
         this.lastName = profile.lastName;
