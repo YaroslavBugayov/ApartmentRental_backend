@@ -15,10 +15,4 @@ router.post('/login', userController.login);
 router.post('/logout', userController.logout);
 router.get('/refresh', userController.refresh);
 
-router.get('/profile/all', profileController.getAllProfiles)
-router.post('/profile/set', profileController.setProfile)
-router.get('/profile/get', profileController.getProfile)
-
-router.get('/keywords', keywordController.getKeywords)
-
 export default router;

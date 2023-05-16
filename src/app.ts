@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import errorMiddleware from "./middlewares/error.middleware";
+import profileRouter from "./routes/profile.router";
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/api', userRouter);
-// app.use('/api/profile')
+app.use('/api/profile', profileRouter);
 
 app.use(errorMiddleware);
 
