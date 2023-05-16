@@ -14,7 +14,7 @@ export const inviteController = {
 
     async getReceived(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
-            return res.status(201).json(await inviteService.getReceived(req.userId as number));
+            return res.status(200).json(await inviteService.getReceived(req.userId as number));
         } catch (error) {
             next(error);
         }
@@ -22,7 +22,7 @@ export const inviteController = {
 
     async getSent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
-            return res.status(201).json(await inviteService.getSent(req.userId as number));
+            return res.status(200).json(await inviteService.getSent(req.userId as number));
         } catch (error) {
             next(error);
         }
@@ -31,7 +31,7 @@ export const inviteController = {
     async getReceivedByStatus(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const { status } = req.params;
-            return res.status(201).json(await inviteService.getReceivedByStatus(req.userId as number, status));
+            return res.status(200).json(await inviteService.getReceivedByStatus(req.userId as number, status));
         } catch (error) {
             next(error);
         }
@@ -40,7 +40,7 @@ export const inviteController = {
     async getSentByStatus(req: AuthenticatedRequest, res: Response, next: NextFunction) {
         try {
             const { status } = req.params;
-            return res.status(201).json(await inviteService.getSentByStatus(req.userId as number, status));
+            return res.status(200).json(await inviteService.getSentByStatus(req.userId as number, status));
         } catch (error) {
             next(error);
         }

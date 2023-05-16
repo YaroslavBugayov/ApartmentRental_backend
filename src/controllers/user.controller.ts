@@ -32,7 +32,7 @@ export const userController = {
 
             res.cookie('refreshToken', user.refreshToken, { maxAge: 30 * 24 * 360000, httpOnly: true });
 
-            return res.status(201).json({ "user": user.userDTO, "accessToken": user.accessToken, "links": links });
+            return res.status(200).json({ "user": user.userDTO, "accessToken": user.accessToken, "links": links });
         } catch (error) {
             next(error)
         }

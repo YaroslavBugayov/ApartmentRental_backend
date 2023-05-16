@@ -7,7 +7,7 @@ export const profileController = {
     async getAllProfiles(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const profiles: ProfileDto[] = await profileService.getAllProfiles();
-            return res.status(201).json(profiles)
+            return res.status(200).json(profiles)
         } catch (error) {
             next(error);
         }
@@ -27,7 +27,7 @@ export const profileController = {
     async getProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             const profile = await profileService.getProfile(req.userId as number);
-            return res.status(201).json(profile);
+            return res.status(200).json(profile);
         } catch (error) {
             next(error);
         }
@@ -37,7 +37,7 @@ export const profileController = {
         try {
             const { keyword } = req.params;
             const profiles: ProfileDto[] = await profileService.getProfilesByKeyword(keyword);
-            return res.status(201).json(profiles)
+            return res.status(200).json(profiles)
         } catch (error) {
             next(error);
         }
@@ -47,7 +47,7 @@ export const profileController = {
         try {
             const { city } = req.params;
             const profiles: ProfileDto[] = await profileService.getProfilesByCity(city);
-            return res.status(201).json(profiles)
+            return res.status(200).json(profiles)
         } catch (error) {
             next(error);
         }
@@ -57,7 +57,7 @@ export const profileController = {
         try {
             const { gender } = req.params;
             const profiles: ProfileDto[] = await profileService.getProfilesByGender(gender);
-            return res.status(201).json(profiles);
+            return res.status(200).json(profiles);
         } catch (error) {
             next(error);
         }
@@ -66,7 +66,7 @@ export const profileController = {
     async delete(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             await profileService.delete(req.userId as number)
-            return res.status(201).json({ message: "Profile deleted successfully" });
+            return res.status(200).json({ message: "Profile deleted successfully" });
         } catch (error) {
             next(error);
         }
