@@ -31,5 +31,35 @@ export const profileController = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+
+    async getProfilesByKeyword(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
+        try {
+            const { keyword } = req.params;
+            const profiles: ProfileDto[] = await profileService.getProfilesByKeyword(keyword);
+            return res.status(201).json(profiles)
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    async getProfilesByCity(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
+        try {
+            const { city } = req.params;
+            const profiles: ProfileDto[] = await profileService.getProfilesByCity(city);
+            return res.status(201).json(profiles)
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    async getProfilesByGender(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
+        try {
+            const { gender } = req.params;
+            const profiles: ProfileDto[] = await profileService.getProfilesByGender(gender);
+            return res.status(201).json(profiles)
+        } catch (error) {
+            next(error);
+        }
+    },
 }
