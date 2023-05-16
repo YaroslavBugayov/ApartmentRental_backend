@@ -8,6 +8,16 @@ const prisma = new PrismaClient();
 
 export const inviteService = {
     async send(senderId: number, recipient: string) : Promise<SentInviteDto> {
+        const senderProfile: Profile | null = await prisma.profile.findUnique({
+            where: {
+                userId: senderId
+            }
+        });
+
+        if (!senderProfile) {
+            throw ApiError.BadRequest("First create a profile");
+        }
+
         const senderDb: User | null = await prisma.user.findUnique({
             where: {
                 id: senderId
@@ -19,6 +29,16 @@ export const inviteService = {
                 username: recipient
             }
         });
+
+        const recipientProfile: Profile | null = await prisma.profile.findUnique({
+            where: {
+                userId: recipientDb?.id
+            }
+        });
+
+        if (!recipientProfile) {
+            throw ApiError.BadRequest("The recipient does not have a profile");
+        }
 
         if (senderDb?.username == recipient) {
             throw ApiError.BadRequest("Sender coincides with recipient")

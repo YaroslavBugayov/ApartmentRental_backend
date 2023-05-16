@@ -169,4 +169,27 @@ export const profileService = {
         }));
         return profileDTOs;
     },
+
+    async delete(id: number) : Promise<Profile> {
+        const profileDb: Profile | null = await prisma.profile.findUnique({
+            where: {
+                userId: id
+            }
+        });
+        if (!profileDb) {
+            throw ApiError.BadRequest("Profile not found");
+        }
+        await prisma.profileKeyword.deleteMany({
+            where: {
+                profileId: profileDb.id
+            }
+        });
+
+        const profile: Profile = await prisma.profile.delete({
+            where: {
+                userId: id
+            }
+        });
+        return profile;
+    }
 }
