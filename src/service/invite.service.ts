@@ -1,7 +1,8 @@
-import {Invite, PrismaClient, Status, User} from "@prisma/client";
+import {Invite, PrismaClient, Profile, Status, User} from "@prisma/client";
 import {ApiError} from "../errors/api.error";
-import SentInviteDto from "../dtos/sentInvite.dto";
-import ReceivedInviteDto from "../dtos/receivedInvite.dto";
+import SentInviteDto from "../dtos/sent-invite.dto";
+import ReceivedInviteDto from "../dtos/received-invite.dto";
+import ReceivedInviteWithContactDto from "../dtos/received-invite-with-contact.dto";
 
 const prisma = new PrismaClient();
 
@@ -64,7 +65,17 @@ export const inviteService = {
                 }
             });
             const senderUsername = sender ? sender.username : 'Unknown user';
-            return new ReceivedInviteDto(senderUsername, invite.status);
+            if (invite.status == Status.ACCEPTED) {
+                const sendersProfile: Profile | null = await prisma.profile.findUnique({
+                    where: {
+                        userId: sender?.id
+                    }
+                });
+                return new ReceivedInviteWithContactDto(senderUsername, invite.status,
+                    sendersProfile?.contact != undefined ? sendersProfile?.contact : 'Contacts not found');
+            } else {
+                return new ReceivedInviteDto(senderUsername, invite.status);
+            }
         }));
         return inviteDTOs;
     },
