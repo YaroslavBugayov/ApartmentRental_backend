@@ -1,13 +1,14 @@
 import {Invite, PrismaClient, Status, User} from "@prisma/client";
 import {ApiError} from "../errors/api.error";
+import InviteDto from "../dtos/invite.dto";
 
 const prisma = new PrismaClient();
 
 export const inviteService = {
-    async send(sender: string, recipient: string) : Promise<Invite> {
+    async send(senderId: number, recipient: string) : Promise<InviteDto> {
         const senderDb: User | null = await prisma.user.findUnique({
             where: {
-                username: sender
+                id: senderId
             }
         });
 
@@ -16,6 +17,10 @@ export const inviteService = {
                 username: recipient
             }
         });
+
+        if (senderDb?.username == recipient) {
+            throw ApiError.BadRequest("Sender coincides with recipient")
+        }
 
         if (!senderDb) {
             throw ApiError.BadRequest("Sender not found");
@@ -42,6 +47,15 @@ export const inviteService = {
             }
         });
 
-        return invite;
+        return new InviteDto(recipientDb.username, invite.status);
+    },
+
+    async getReceived(id: number) : Promise<Invite[]> {
+        const invites: Invite[] = await prisma.invite.findMany({
+            where: {
+                recipientId: id
+            }
+        });
+        return invites;
     }
 }
