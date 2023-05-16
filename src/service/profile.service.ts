@@ -24,7 +24,8 @@ export const profileService = {
     },
 
     async setProfile(age: number, gender: string, city: string, keywords: KeywordModel[], description: string,
-                     lastName: string, firstName: string, id: number) : Promise<ProfileDto> {
+                     lastName: string, firstName: string, contact: string, id: number)
+        : Promise<{ profile: ProfileDto, contact: string } | null> {
 
         const profileDb: Profile | null = await prisma.profile.findUnique({
             where: {
@@ -55,6 +56,7 @@ export const profileService = {
                 connect:
                     { id: id }
             },
+            contact: contact,
             keywords: {
                 create: keywords
                     .map(keyword => ({
@@ -90,10 +92,11 @@ export const profileService = {
             });
 
         const keywordDTOs: KeywordDto[] = await keywordService.getProfilesKeywords(id);
-        return new ProfileDto(profileData, keywordDTOs, profileData.user.username);
+        return { profile: new ProfileDto(profileData, keywords, profileData.user.username),
+            contact: profileData.contact };
     },
 
-    async getProfile(id: number) : Promise<ProfileDto | null> {
+    async getProfile(id: number) : Promise<{ profile: ProfileDto, contact: string } | null> {
         const profile: ProfileWithUser | null = await prisma.profile.findUnique({
             where: {
                 userId: id
@@ -107,7 +110,7 @@ export const profileService = {
         }
 
         const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(id);
-        return new ProfileDto(profile, keywords, profile.user.username);
+        return { profile: new ProfileDto(profile, keywords, profile.user.username), contact: profile.contact };
     },
 
     async getProfilesByKeyword(keyword: string) : Promise<ProfileDto[]> {

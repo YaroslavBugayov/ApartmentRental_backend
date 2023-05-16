@@ -15,9 +15,9 @@ export const profileController = {
 
     async setProfile(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
-            const { age, gender, city, keywords, description, firstName, lastName } = req.body;
+            const { age, gender, city, keywords, description, firstName, lastName, contact } = req.body;
             const profile = await profileService.setProfile(age, gender, city, keywords, description,
-                lastName, firstName, req.userId as number);
+                lastName, firstName, contact, req.userId as number);
             return res.status(201).json(profile);
         } catch (error) {
             next(error);

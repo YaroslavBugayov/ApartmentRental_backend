@@ -39,6 +39,7 @@ model Profile {
   description   String      @db.VarChar(300)
   userId        Int         @unique
   user          User        @relation(fields: [userId], references: [id])
+  contact       String
   keywords      ProfileKeyword[]
 
   @@map("Profile")
