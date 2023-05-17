@@ -1,18 +1,18 @@
 import express from "express";
 import {profileController} from "../controllers/profile.controller";
 import {keywordController} from "../controllers/keyword.controller";
-import authMiddleware from "../middlewares/auth.middleware";
 
 const router = express.Router();
 
-router.get('/all', authMiddleware, profileController.getAllProfiles);
-router.post('/set', authMiddleware, profileController.setProfile);
-router.get('/get', authMiddleware, profileController.getProfile);
-router.delete('/delete', authMiddleware, profileController.delete);
-router.get('/filter/keyword/:keyword', authMiddleware, profileController.getProfilesByKeyword);
-router.get('/filter/city/:city', authMiddleware, profileController.getProfilesByCity);
-router.get('/filter/gender/:gender', authMiddleware, profileController.getProfilesByGender);
+router.get('/all', profileController.getAllProfiles);
+router.post('/set', profileController.setProfile);
+router.get('/get', profileController.getProfile);
+router.delete('/delete', profileController.delete);
+router.get('/filter', profileController.getProfilesByFilter);
+router.get('/filter/keyword/:keyword', profileController.getProfilesByKeyword);
+router.get('/filter/city/:city', profileController.getProfilesByCity);
+router.get('/filter/gender/:gender', profileController.getProfilesByGender);
 
-router.get('/keywords', authMiddleware, keywordController.getKeywords);
+router.get('/keywords', keywordController.getKeywords);
 
 export default router;

@@ -102,7 +102,7 @@ export const inviteService = {
                 senderId: id
             }
         });
-        return getSentInveteDTOs(invites);
+        return getSentInviteDTOs(invites);
     },
 
     async getSentByStatus(id: number, status: string) : Promise<SentInviteDto[]> {
@@ -115,7 +115,7 @@ export const inviteService = {
                 status: status as Status
             }
         });
-        return getSentInveteDTOs(invites);
+        return getSentInviteDTOs(invites);
     },
 
     async answer(id: number, sender: string, status: string) : Promise<ReceivedInviteDto> {
@@ -176,7 +176,7 @@ const getReceivedInviteDTOs = async (invites: Invite[]) : Promise<ReceivedInvite
     }));
 }
 
-const getSentInveteDTOs = async (invites: Invite[]) : Promise<SentInviteDto[]> => {
+const getSentInviteDTOs = async (invites: Invite[]) : Promise<SentInviteDto[]> => {
     return await Promise.all(invites.map(async invite => {
         const recipient: User | null = await prisma.user.findUnique({
             where: {

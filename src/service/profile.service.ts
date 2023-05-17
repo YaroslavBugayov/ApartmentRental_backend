@@ -92,7 +92,7 @@ export const profileService = {
             });
 
         const keywordDTOs: KeywordDto[] = await keywordService.getProfilesKeywords(id);
-        return { profile: new ProfileDto(profileData, keywords, profileData.user.username),
+        return { profile: new ProfileDto(profileData, keywordDTOs, profileData.user.username),
             contact: profileData.contact };
     },
 
@@ -128,11 +128,8 @@ export const profileService = {
                 user: true
             }
         });
-        const profileDTOs = await Promise.all(profiles.map(async profile => {
-            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords, profile.user.username);
-        }));
-        return profileDTOs;
+
+        return await getProfileDTOs(profiles);
     },
 
     async getProfilesByCity(city: string) : Promise<ProfileDto[]> {
@@ -144,11 +141,8 @@ export const profileService = {
                 user: true
             }
         });
-        const profileDTOs = await Promise.all(profiles.map(async profile => {
-            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords, profile.user.username);
-        }));
-        return profileDTOs;
+
+        return await getProfileDTOs(profiles);
     },
 
     async getProfilesByGender(gender: string) : Promise<ProfileDto[]> {
@@ -163,11 +157,40 @@ export const profileService = {
                 user: true
             }
         });
-        const profileDTOs = await Promise.all(profiles.map(async profile => {
-            const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
-            return new ProfileDto(profile, keywords, profile.user.username);
-        }));
-        return profileDTOs;
+
+        return await getProfileDTOs(profiles);
+    },
+
+    async getProfilesByFilter(gender: string, city: string, keywords: string[]) : Promise<ProfileDto[]> {
+        if (gender && !(gender in Gender)) {
+            throw ApiError.BadRequest("Unknown gender");
+        }
+        const profiles: ProfileWithUser[] = await prisma.profile.findMany({
+            where: {
+                gender: gender as Gender,
+                city: city,
+                keywords: {
+                    some: {
+                        keyword: {
+                            word: {
+                                in: keywords
+                            }
+                        }
+                    }
+                }
+            },
+            include: {
+                user: true
+            }
+        });
+
+        if (!keywords) {
+            return await getProfileDTOs(profiles);
+        } else {
+            return (await getProfileDTOs(profiles)).filter(profile => {
+                return keywords.every(item => profile.keywords.map(keywords => keywords.word).includes(item));
+            });
+        }
     },
 
     async delete(id: number) : Promise<Profile> {
@@ -192,4 +215,11 @@ export const profileService = {
         });
         return profile;
     }
+}
+
+const getProfileDTOs = async (profiles: ProfileWithUser[]) : Promise<ProfileDto[]> => {
+    return await Promise.all(profiles.map(async profile => {
+        const keywords: KeywordDto[] = await keywordService.getProfilesKeywords(profile.userId);
+        return new ProfileDto(profile, keywords, profile.user.username);
+    }));
 }
