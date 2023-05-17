@@ -7,6 +7,7 @@ import swaggerUi from 'swagger-ui-express';
 import errorMiddleware from "./middlewares/error.middleware";
 import profileRouter from "./routes/profile.router";
 import inviteRouter from "./routes/invite.router";
+import authMiddleware from "./middlewares/auth.middleware";
 
 dotenv.config();
 
@@ -20,8 +21,8 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/api', userRouter);
-app.use('/api/profile', profileRouter);
-app.use('/api/invite', inviteRouter)
+app.use('/api/profile', authMiddleware, profileRouter);
+app.use('/api/invite', authMiddleware, inviteRouter);
 
 app.use(errorMiddleware);
 

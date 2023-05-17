@@ -63,6 +63,15 @@ export const profileController = {
         }
     },
 
+    async getProfilesByFilter(req: Request, res: Response, next: NextFunction) : Promise<Response | undefined> {
+        try {
+            const { gender, city, keywords } = req.body;
+            return res.status(200).json(await profileService.getProfilesByFilter(gender, city, keywords));
+        } catch (error) {
+            next(error);
+        }
+    },
+
     async delete(req: AuthenticatedRequest, res: Response, next: NextFunction) : Promise<Response | undefined> {
         try {
             await profileService.delete(req.userId as number)
